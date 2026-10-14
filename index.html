@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marine COP — demo</title>
+<meta name="description" content="Walkthrough demo of the Marine Common Operating Picture. All operational and cultural data is fictitious.">
+<meta name="robots" content="noindex, nofollow">
+<!-- iPad: "Add to Home Screen" opens full screen, without Safari's toolbars -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Marine COP">
+<meta name="theme-color" content="#0e1c22">
+<link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <img class="crest" src="assets/nanwakolas-white.svg" alt="Na&#x332;nwak&#x332;olas Council">
+    <nav id="rail-nav" aria-label="Pages"></nav>
+  </aside>
+
+  <header class="top">
+    <div class="brand">Marine COP</div>
+    <div class="switcher" id="switcher">
+      <button id="switcher-btn" data-act="switch" aria-haspopup="true" aria-label="Incident switcher"></button>
+      <div class="menu hid" id="switch-menu"></div>
+    </div>
+    <div class="grow"></div>
+    <div class="democtl" id="democtl"></div>
+    <button class="iconbtn" id="theme-btn" data-act="theme"></button>
+    <div class="clock" id="clock"></div>
+  </header>
+
+  <main><div id="view"></div><div id="drawer"></div></main>
+</div>
+
+<!-- The shared map waits here while the current page has no map. -->
+<div id="parking" aria-hidden="true"></div>
+
+<!-- PDF.js renders documents as scrollable pages; iPad Safari will not
+     scroll a PDF inside an iframe. Loaded BEFORE the ArcGIS loader, whose
+     AMD `define` would otherwise capture it. -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<!-- ArcGIS Maps SDK for JavaScript 4.30 (matches Enterprise 11.4). Demo loads it from the CDN. -->
+<script src="https://js.arcgis.com/4.30/"></script>
+<script src="js/data.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
