@@ -21,7 +21,7 @@ const S = {
   /* Cultural buffers default ON here so the scenario reads at a glance.
      Production defaults them off (CLAUDE.md §2). */
   layers: { inc: true, traj: true, obs: true, grs: true, eqf: true, eqd: true, cult: true, arch: false, cur: false, bathy: false, alerts: false },
-  layersCollapsed: false, copVP: null,
+  layersCollapsed: false, ctxOpen: false, copVP: null,
   doc: null,                       // {kind: 'grs'|'plan', id} open in the drawer
   incTab: 'timeline', op201: null,
   logQuery: '', closedOpen: false,
@@ -42,6 +42,7 @@ const km = ([lo1, la1], [lo2, la2]) => {
   return 12742 * Math.asin(Math.sqrt(h));
 };
 const fmtN = n => n.toLocaleString('en-CA');
+const centroid = pts => [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
 const incidents = () => INCIDENTS.filter(i => S.live || i.id !== '2026-041');
 const actives = () => incidents().filter(i => i.status === 'Active');
 const incById = id => incidents().find(i => i.id === id);
@@ -219,7 +220,7 @@ const LAYER_GROUPS = [
     ['inc', 'Incidents', () => swatch(ICON.incident('Active', 1))],
     ['traj', 'Sheen extent', () => fillSw('rgba(224,138,30,.35)', 'dashed #e08a1e'), true],
     ['obs', 'Field observations', () => swatch(ICON.observation())],
-    ['grs', 'Response strategies', () => swatch(ICON.grs())],
+    ['grs', 'GRS sites', () => swatch(ICON.grs())],
     ['eqf', 'Caches', () => swatch(ICON.equipment('Fixed', 'Cache', 'Ready'))],
     ['eqd', 'Vessels and boom', () => swatch(ICON.equipment('Deployable', 'Vessel', 'Ready'))]]],
   ['Sensitive', 'Fictitious', [
@@ -241,9 +242,10 @@ const copPage = {
       ? `<div class="hd"><button data-act="collapse" aria-label="Show layers">${ui('layers')}</button></div>`
       : `<div class="hd">${ui('layers')}<b>Layers</b><button data-act="collapse" aria-label="Hide layers">${ui('close')}</button></div>
       <div class="scroll"><div class="seg">${['sat', 'gray'].map(k => `<button data-act="basemap" data-v="${k}" class="${CopMap.basemap === k ? 'on' : ''}">${k === 'sat' ? 'Satellite' : 'Light grey'}</button>`).join('')}</div>
-      ${LAYER_GROUPS.map(([name, tag, items]) => `<div class="grp"><span class="cat">${name}</span>${tag ? `<span class="pill fict">${tag}</span>` : ''}</div>
-        ${items.map(([key, label, sw, liveOnly]) => { const dis = liveOnly && !S.live, on = S.layers[key] && !dis;
-          return `<label class="lrow ${on ? '' : 'off'} ${dis ? 'dis' : ''}"><span class="swbox">${sw()}</span><span class="nm">${label}</span><input type="checkbox" class="toggle" data-layer="${key}" ${on ? 'checked' : ''}></label>`; }).join('')}`).join('')}</div>`;
+      ${LAYER_GROUPS.map(([name, tag, items]) => { const fold = name === 'Context', open = !fold || S.ctxOpen;
+        return (fold ? `<button class="grp fold" data-act="ctx"><span class="cat">${name}</span>${ui('chevron', open ? '' : 'shut')}</button>` : `<div class="grp"><span class="cat">${name}</span>${tag ? `<span class="pill fict">${tag}</span>` : ''}</div>`)
+        + (!open ? '' : items.map(([key, label, sw, liveOnly]) => { const dis = liveOnly && !S.live, on = S.layers[key] && !dis;
+          return `<label class="lrow ${on ? '' : 'off'} ${dis ? 'dis' : ''}"><span class="swbox">${sw()}</span><span class="nm">${label}</span><input type="checkbox" class="toggle" data-layer="${key}" ${on ? 'checked' : ''}></label>`; }).join('')); }).join('')}</div>`;
     paintDock();
   },
 };
@@ -291,9 +293,9 @@ const incPage = {
     const i = currentInc();
     return { visible: { ...ALL_OFF, inc: true, traj: S.live, obs: true, grs: true, eqf: true, eqd: true, cult: S.layers.cult, arch: S.layers.arch, alerts: S.layers.alerts },
       incidentExpr: incExpr(false, i.id), obsFor: i.id, live: S.live, pulse: i.status === 'Active' ? i.at : null,
-      padding: { left: 0, top: 0, right: 0, bottom: 0 }, zoom: 14, select: null,
-      /* frame the live incident with what it threatens: nearby buffers and its strategy site */
-      goTo: i.status === 'Active' ? [i.at, grsById(i.grs).at, ...CULTURAL.filter(c => km(i.at, c.at) < 3).map(c => c.at)] : i.at };
+      padding: { left: 0, top: 0, right: 0, bottom: 0 }, select: null,
+      /* centre the live incident with what it threatens: nearby buffers and its strategy site */
+      goTo: i.status === 'Active' ? centroid([i.at, grsById(i.grs).at, ...CULTURAL.filter(c => km(i.at, c.at) < 3).map(c => c.at)]) : i.at, zoom: 13.6 };
   },
   paint() {
     const i = currentInc();
@@ -550,6 +552,7 @@ document.addEventListener('click', e => {
       S.incId = S.live ? '2026-041' : (S.incId === '2026-041' ? null : S.incId);
       S.copVP = null; render(); break;
     case 'theme': S.ops = !S.ops; renderFrame(); break;
+    case 'ctx': S.ctxOpen = !S.ctxOpen; copPage.paint(); break;
     case 'collapse': S.layersCollapsed = !S.layersCollapsed; copPage.paint(); remap(); break;
     case 'basemap': CopMap.setBasemap(d.v); break;
     case 'close-pop': clearSel(); break;
@@ -587,6 +590,9 @@ document.addEventListener('keydown', e => {
   if (S.doc) { S.doc = null; renderDrawer(); } else clearSel();
 });
 document.addEventListener('cop:basemap', () => { if (S.page === 'cop') copPage.paint(); });
+
+/* iOS Safari only applies :active styles when a touch listener exists. */
+document.addEventListener('touchstart', () => {}, { passive: true });
 
 tickClock(); setInterval(tickClock, 10000);
 CopMap.init();

@@ -209,7 +209,7 @@ const CopMap = (() => {
     if (Array.isArray(target) && typeof target[0] === 'number') t = { target: pt(target), zoom: opts.zoom || Math.max(view.zoom, 13) };
     else if (Array.isArray(target)) {
       const xs = target.map(p => p[0]), ys = target.map(p => p[1]);
-      const px = Math.max(0.01, (Math.max(...xs) - Math.min(...xs)) * 0.1), py = Math.max(0.006, (Math.max(...ys) - Math.min(...ys)) * 0.1);
+      const px = Math.max(0.012, (Math.max(...xs) - Math.min(...xs)) * 0.3), py = Math.max(0.007, (Math.max(...ys) - Math.min(...ys)) * 0.3);
       t = new M.Extent({ xmin: Math.min(...xs) - px, xmax: Math.max(...xs) + px, ymin: Math.min(...ys) - py, ymax: Math.max(...ys) + py, spatialReference: { wkid: 4326 } });
     } else if (target === 'home') t = { center: HOME.center, zoom: HOME.zoom };
     view.goTo(t, { duration: opts.instant ? 0 : 650, easing: 'ease-in-out' }).catch(() => {});

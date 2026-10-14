@@ -100,7 +100,7 @@ main { grid-column: 2; position: relative; overflow: hidden; }
 body.ops .chip.exp { background: #3b201c; border-color: #6b352d; color: #ffb4a6; }
 body.ops .chip.soon { background: #352718; border-color: #634528; color: #f0c59c; }
 .search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--panel); border-radius: var(--r); padding: 0 12px; height: 42px; margin-bottom: 12px; }
-.search input { border: 0; background: transparent; outline: none; width: 100%; font-size: .9rem; }
+.search input { border: 0; background: transparent; outline: none; width: 100%; height: 100%; font-size: .9rem; }
 .search .ico { color: var(--fog); width: 18px; height: 18px; }
 .chips { display: flex; gap: 6px; }
 .chips button { min-height: 36px; border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 0 14px; font-size: .8rem; font-weight: 600; color: var(--fog); }
@@ -195,6 +195,10 @@ button.cell:active { background: var(--app-bg); }
 .layers .scroll { overflow: auto; padding: 8px 8px 10px; -webkit-overflow-scrolling: touch; }
 .layers .seg { width: 100%; margin-bottom: 4px; } .layers .seg button { flex: 1; }
 .layers .grp { margin-top: 8px; padding: 0 6px; display: flex; align-items: center; gap: 6px; }
+.layers .grp.fold { width: 100%; border: 0; background: none; min-height: 40px; margin-top: 4px; justify-content: space-between; color: var(--fog); }
+.layers .grp.fold .ico { width: 16px; height: 16px; transition: transform .15s; }
+.layers .grp.fold .ico.shut { transform: rotate(-90deg); }
+.layers .scroll { scrollbar-width: thin; }
 .lrow { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; min-height: 40px; padding: 0 6px; border-radius: 6px; font-size: .86rem; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .lrow:active { background: var(--app-bg); }
 .lrow .swbox { display: grid; place-items: center; }
@@ -241,7 +245,7 @@ button.cell:active { background: var(--app-bg); }
 .timeline li.day { padding: 2px 0 10px 16px; font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--fog); }
 .timeline li.day::before { display: none; }
 .timeline .when { font-family: var(--mono); font-size: .72rem; color: var(--fog); }
-.timeline button { border: 0; background: none; padding: 0; text-align: left; color: inherit; }
+.timeline button { display: block; width: 100%; min-height: 36px; border: 0; background: none; padding: 2px 0; text-align: left; color: inherit; }
 .timeline button.link { color: var(--tidewater); font-weight: 600; }
 body.ops .timeline button.link { color: var(--tidewater-lt); }
 
@@ -268,7 +272,7 @@ body.ops .timeline button.link { color: var(--tidewater-lt); }
 .split .listcol { overflow: auto; padding: 18px 16px 24px 20px; -webkit-overflow-scrolling: touch; }
 .split .mapcol { position: relative; border-left: 1px solid var(--border); }
 .grouphead { margin: 14px 0 8px; display: flex; align-items: center; gap: 8px; }
-.grouphead button { border: 0; background: none; padding: 6px 0; display: flex; align-items: center; gap: 4px; }
+.grouphead button { border: 0; background: none; min-height: 40px; padding: 0; display: flex; align-items: center; gap: 4px; }
 .row { display: grid; grid-template-columns: 5px 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r); padding: 0 12px 0 0; margin-bottom: 8px; min-height: 60px; overflow: hidden; }
 .row.sel { border-color: var(--tidewater); box-shadow: 0 0 0 1px var(--tidewater) inset; }
 .row .stripe { align-self: stretch; }
@@ -305,6 +309,16 @@ tr.picked td { background: var(--tide-wash); }
 .empty { color: var(--fog); font-size: .88rem; padding: 18px; text-align: center; border: 1px dashed var(--border); border-radius: var(--r); }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 10px 16px; border-radius: 8px; font-size: .86rem; z-index: 300; box-shadow: var(--shadow); }
 
+/* ── Touch (iPad) ──────────────────────────────────────────────────────
+   Safari zooms the whole page when a field under 16 px gets focus; keep
+   fields at 16 px on touch screens. App chrome is not selectable, so a
+   long-press on a button doesn't start a text selection. */
+@media (pointer: coarse) {
+  input, select, textarea, table.t select, table.t input[type=text], .search input { font-size: 16px; }
+}
+.rail, .top, .strip, .tabs, .layers, .btn, .chips, .seg, .row, .slot, .cell, .mapctl, .mappop .actions, .plangrid .card, .obscard { -webkit-user-select: none; user-select: none; }
+img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+
 /* ── iPad portrait and narrow windows ──────────────────────────────────── */
 @media (max-width: 1000px) {
   .brand, .democtl .cat { display: none; }
@@ -317,5 +331,9 @@ tr.picked td { background: var(--tide-wash); }
   .crewgrid { grid-template-columns: 1fr; }
   .drawer { width: 100%; }
   .strip .cell .d { display: none; }
+  .cell .v { font-size: 1.35rem; }
+  /* portrait: the incident cell already opens the incident, so drop the button and op period */
+  .strip.ops { grid-template-columns: 1.5fr 1fr 1fr 1.3fr !important; }
+  .strip.ops .act, .strip.ops .cell:nth-child(2) { display: none; }
 }
 @media print { body * { visibility: hidden; } .doc, .doc * { visibility: visible; } .doc { position: absolute; inset: 0 auto auto 0; border: 0; } }
